@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+    <body>
+        <label for="room-search">Search for room</label>
+        <input id="room-search" class="js-input" type="text" placeholder="Enter room name">
+        
+        <div class="js-room-list"></div>
+
+        <template id="room-template">
+            <div class="card">
+                <p class="room_name"></p>
+                <p class="room_floor"></p>
+                <p class="room_directions"></p>
+            </div>
+        </template>
+
+        <script type="text/javascript" src="./map.js"></script>
+        <script type="text/javascript">
+            class RoomFinder {
+                constructor() {
+                    this.rooms = thirdFloor;
+                }
+
+                findRoomsBySearchText(searchTerm) {
+                    const normalizedSearchTerm = searchTerm.replace(/\s/g, "");
+                    const rooms = Object.keys(this.rooms);
+
+                    return rooms
+                        .filter(room => {
+                            return room.indexOf(normalizedSearchTerm) > -1;
+                        })
+                        .map(foundRoom => {
+                            return this.rooms[foundRoom];
+                        });
+                }
+            }
+
+            class App {
+                constructor() {
+                    this.inputNode = document.querySelector(".js-input");
+                    this.roomListNode = document.querySelector(".js-room-list");
+                    this.template = document.getElementById("room-template");
+
+                    this.roomFinder = new RoomFinder();
+
+                    this.addEventListeners = this.addEventListeners.bind(this);
+                    this.handleInputChange = this.handleInputChange.bind(this);
+                    this.renderListToScreen = this.renderListToScreen.bind(this);
+                    this.removeChildrenNodesFromElement = this.removeChildrenNodesFromElement.bind(this);
+
+
+                    this.addEventListeners();
+                }
+
+                addEventListeners() {
+                    this.inputNode.addEventListener("input", this.handleInputChange);
+                }
+
+                handleInputChange(event) {
+                    event.preventDefault();
+
+                    const searchText = this.inputNode.value;
+                    const matchedRooms = this.roomFinder.findRoomsBySearchText(searchText);
+                    this.renderListToScreen(matchedRooms);
+                }
+
+                renderListToScreen(roomsList) {
+                    // Clear existing list of rooms
+                    this.removeChildrenNodesFromElement(this.roomListNode);
+
+                    // Add matching rooms
+                    const fragment = document.createDocumentFragment();
+                    roomsList.forEach(room => {
+                        const clone = document.importNode(this.template.content, true);
+                        const nameNode = clone.querySelector(".room_name"); 
+                        nameNode.textContent = room.name;
+
+                        const floorNode = clone.querySelector(".room_floor"); 
+                        floorNode.textContent = room.floor;
+
+                        const directionsNode = clone.querySelector(".room_directions"); 
+                        directionsNode.textContent = room.directions;
+
+                        fragment.appendChild(clone);
+                    });
+                    this.roomListNode.appendChild(fragment);
+                }
+
+                removeChildrenNodesFromElement(element) {
+                    while (element.firstChild) {
+                        element.removeChild(element.firstChild);
+                    }
+                }
+            }
+
+            const app = new App();
+        </script>
+    </body>
+</html>
