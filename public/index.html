@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>SF Map PWA</title>
+
+        <link rel="shortcut icon" type="image/png" href="/icons/icon-16x16.png">
+        <link rel="manifest" href="/manifest.json">
+        <meta name="theme-color" content="#000">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <meta name="apple-mobile-web-app-title" content="Dictionary PWA">
+        <link rel="apple-touch-icon" href="/icons/icon-152x152.png">
+
+        <style>
+            html, body {
+                margin: 0;
+            }
+
+            body {
+                font-family: Helvetica, sans-serif;
+            }
+
+            header {
+                height: 72px;
+                background-color: #202124;
+                box-shadow: 0 2px 4px rgba(0,0,0,.5);
+                color: white;
+                display: flex;
+                align-items: center;
+                padding: 0 16px;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+            }
+
+            .search-room__label {
+                margin-right: 16px;
+                text-transform: uppercase;
+            }
+
+            .search-room__input {
+                font-size: 16px;
+            }
+
+            .instructions {
+                margin: 88px 16px 0;
+            }
+
+            .card {
+                box-shadow: 0 3px 3px -2px rgba(0,0,0,.2), 0 3px 4px 0 rgba(0,0,0,.14), 0 1px 8px 0 rgba(0,0,0,.12);
+                padding: 16px;
+                margin: 16px;
+            }
+
+            .room_name {
+                font-size: 48px;
+                margin: 0;
+            }
+
+            .room_floor {
+                font-size: 34px;
+                margin: 16px 0;
+            }
+
+            .room_directions {
+                font-size: 80px;
+                margin: 16px 0 0;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <label class="search-room__label" for="room-search">Get room directions</label>
+            <input id="room-search" class="js-input search-room__input" type="text" placeholder="Enter room name">
+        </header>
+
+        <p class="instructions">Example: 👈 👈 make a left at the elevator, then a left at the corner. The room is on this side of the floor</p>
+        
+        <div class="js-room-list"></div>
+
+        <template id="room-template">
+            <div class="card">
+                <p class="room_name"></p>
+                <p class="room_floor"></p>
+                <p class="room_directions"></p>
+            </div>
+        </template>
+
+        <script type="text/javascript" src="./map.js"></script>
+        <script type="text/javascript">
+            // FRONT, LEFT, RIGHT
+            // directions should be an array
+            function emojiDirectionFormatter(directions) {
+                return directions.map(direction => {
+                    switch(direction) {
+                        case "FRONT":
+                            return "☝️";
+                        case "LEFT":
+                            return "👈";
+                        case "RIGHT":
+                            return "👉";
+                        default:
+                            return "error";
+                    }
+                }).join(" ");
+            }
+
+            class RoomFinder {
+                constructor() {
+                    this.rooms = allFloors;
+                }
+
+                findRoomsBySearchText(searchTerm) {
+                    const normalizedSearchTerm = searchTerm.replace(/\s/g, "");
+                    const rooms = Object.keys(this.rooms);
+
+                    return rooms
+                        .filter(room => {
+                            return room.indexOf(normalizedSearchTerm) > -1;
+                        })
+                        .map(foundRoom => {
+                            return this.rooms[foundRoom];
+                        });
+                }
+            }
+
+            class App {
+                constructor() {
+                    this.inputNode = document.querySelector(".js-input");
+                    this.roomListNode = document.querySelector(".js-room-list");
+                    this.template = document.getElementById("room-template");
+
+                    this.roomFinder = new RoomFinder();
+
+                    this.addEventListeners = this.addEventListeners.bind(this);
+                    this.handleInputChange = this.handleInputChange.bind(this);
+                    this.renderListToScreen = this.renderListToScreen.bind(this);
+                    this.removeChildrenNodesFromElement = this.removeChildrenNodesFromElement.bind(this);
+
+
+                    this.addEventListeners();
+                }
+
+                addEventListeners() {
+                    this.inputNode.addEventListener("input", this.handleInputChange);
+                }
+
+                handleInputChange(event) {
+                    event.preventDefault && event.preventDefault();
+
+                    const searchText = this.inputNode.value;
+                    const matchedRooms = this.roomFinder.findRoomsBySearchText(searchText);
+                    this.renderListToScreen(matchedRooms);
+                }
+
+                renderListToScreen(roomsList) {
+                    // Clear existing list of rooms
+                    this.removeChildrenNodesFromElement(this.roomListNode);
+
+                    // Add matching rooms
+                    const fragment = document.createDocumentFragment();
+                    roomsList.forEach(room => {
+                        const clone = document.importNode(this.template.content, true);
+                        const nameNode = clone.querySelector(".room_name"); 
+                        nameNode.textContent = room.name;
+
+                        const floorNode = clone.querySelector(".room_floor"); 
+                        floorNode.textContent = `Floor: ${room.floor}`;
+
+                        const directionsNode = clone.querySelector(".room_directions"); 
+                        directionsNode.textContent = emojiDirectionFormatter(room.directions);
+
+                        fragment.appendChild(clone);
+                    });
+                    this.roomListNode.appendChild(fragment);
+                }
+
+                removeChildrenNodesFromElement(element) {
+                    while (element.firstChild) {
+                        element.removeChild(element.firstChild);
+                    }
+                }
+            }
+
+            const app = new App();
+            app.handleInputChange({ preventDefault: () => {}});
+        </script>
+        <script type="text/javascript">
+            if ("serviceWorker" in navigator) {
+                navigator.serviceWorker.register("/sw.js").then(registration => {
+                    console.log('%c[SW] Registration succeeded', 'color: green');
+                }, err => {
+                    console.log('%c[SW] Registration failed: ' + err, 'color: red');
+                });
+            }
+        </script>
+    </body>
+</html>
