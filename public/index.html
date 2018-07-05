@@ -114,7 +114,7 @@
                 }
 
                 findRoomsBySearchText(searchTerm) {
-                    const normalizedSearchTerm = searchTerm.replace(/\s/g, "");
+                    const normalizedSearchTerm = searchTerm.replace(/\s/g, "").toLowerCase();
                     const rooms = Object.keys(this.rooms);
 
                     return rooms
