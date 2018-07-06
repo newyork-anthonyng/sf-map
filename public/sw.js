@@ -1,4 +1,4 @@
-const CACHE_NAME = "sf-rooms-v1";
+const CACHE_NAME = "sf-rooms-v2";
 const filesToCache = ["/", "/index.html", "/map.js"];
 
 self.addEventListener("install", e => {
