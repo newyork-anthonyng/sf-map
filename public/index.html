@@ -29,7 +29,6 @@
                 color: white;
                 display: flex;
                 align-items: center;
-                padding: 0 16px;
                 position: fixed;
                 top: 0;
                 left: 0;
@@ -42,7 +41,20 @@
             }
 
             .search-room__input {
-                font-size: 16px;
+                width: 100%;
+                height: 100%;
+                max-width: 300px;
+                max-height: 42px;
+                font-size: 30px;
+                transition: all 0.3s ease-in-out;
+                padding: 0 16px;
+                transform: translateX(12px);
+            }
+
+            .search-room__input:focus {
+                max-width: 100%;
+                max-height: 100%;
+                transform: translateX(0);
             }
 
             .instructions {
@@ -73,8 +85,7 @@
     </head>
     <body>
         <header>
-            <label class="search-room__label" for="room-search">Get room directions</label>
-            <input id="room-search" class="js-input search-room__input" type="text" placeholder="Enter room name">
+            <input aria-label="Get room directions" class="js-input search-room__input" type="text" placeholder="🔎 Enter room name">
         </header>
 
         <p class="instructions">Example: 👈 👈 make a left at the elevator, then a left at the corner. The room is on this side of the floor</p>
@@ -97,7 +108,7 @@
                 return directions.map(direction => {
                     switch(direction) {
                         case "FRONT":
-                            return "☝️";
+                            return "👆";
                         case "LEFT":
                             return "👈";
                         case "RIGHT":
